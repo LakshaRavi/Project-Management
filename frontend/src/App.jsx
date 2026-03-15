@@ -220,9 +220,7 @@ function App() {
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">JSON Body</label>
                   <button onClick={() => {
-                    try { setBody(JSON.stringify(JSON.parse(body), null, 2)) } catch(e) {
-                      console.log(e)
-                    }
+                    try { setBody(JSON.stringify(JSON.parse(body), null, 2)) } catch(e) { }
                   }} className="text-xs text-blue-400 hover:text-blue-300">Format JSON</button>
                 </div>
                 <textarea 
