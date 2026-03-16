@@ -2,19 +2,45 @@ name: CI Checks
 on:
   pull_request:
     branches: [ "main" ]
+
 jobs:
   lint-frontend:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
       - name: Install Frontend Dependencies
         working-directory: ./frontend
         run: npm ci
+
       - name: Run ESLint
         working-directory: ./frontend
         run: npm run lint
+
+      - name: Update ClickUp Task to COMPLETE
+        if: success()
+        env:
+          CLICKUP_API_KEY: ${{ secrets.CLICKUP_API_KEY }}
+        run: |
+          # Extract Task ID using regex (looks for 7-10 alphanumeric characters)
+          # Matches IDs like 86d27w320 regardless of branch prefix
+          TASK_ID=$(echo "${{ github.head_ref }}" | grep -oE "[a-z0-9]{7,10}" | head -1)
+          
+          if [ -z "$TASK_ID" ]; then
+            echo "No ClickUp Task ID found in branch name. Skipping update."
+            exit 0
+          fi
+
+          echo "Found Task ID: $TASK_ID. Updating status to COMPLETE..."
+          
+          curl --request PUT \
+            --url "https://api.clickup.com/api/v2/task/$TASK_ID" \
+            --header "Authorization: $CLICKUP_API_KEY" \
+            --header "Content-Type: application/json" \
+            --data '{"status": "COMPLETE"}'
